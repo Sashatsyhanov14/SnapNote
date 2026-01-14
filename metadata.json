@@ -1,0 +1,8 @@
+{
+  "description": "SnapNote - умные локальные заметки с AI для Telegram.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ],
+  "name": "SnapNote TMA"
+}
