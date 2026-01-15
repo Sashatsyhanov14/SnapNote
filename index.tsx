@@ -6,14 +6,11 @@ import posthog from 'posthog-js';
 import { ChatInput } from './components/ChatInput';
 import { NoteCard, NoteSkeleton } from './components/NoteCard';
 import { EditModal } from './components/EditModal';
+import { FeedbackModal } from './components/FeedbackModal';
 import { processNoteWithAI, improveEditedNote, processVoiceTranscript } from './lib/gemini';
+import { initPostHog, trackEvent } from './lib/posthog';
 
-if (typeof window !== 'undefined' && process.env.POSTHOG_KEY) {
-  posthog.init(process.env.POSTHOG_KEY, {
-    api_host: 'https://eu.i.posthog.com',
-    person_profiles: 'identified_only',
-  });
-}
+initPostHog();
 
 declare global {
   interface Window {
@@ -34,6 +31,7 @@ const App = () => {
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
   const processedParam = useRef(false);
   const [confirmation, setConfirmation] = useState<{
@@ -43,10 +41,6 @@ const App = () => {
   } | null>(null);
 
   const tg = window.Telegram?.WebApp;
-
-  const track = (event: string, properties?: Record<string, any>) => {
-    posthog.capture(event, properties);
-  };
 
   useEffect(() => {
     if (!tg) return;
@@ -92,7 +86,7 @@ const App = () => {
 
   const handleSend = async (text: string, isFromVoice: boolean = false) => {
     setIsLoading(true);
-    track('note_creation_started', { source: isFromVoice ? 'voice' : 'text' });
+    trackEvent('note_creation_started', { source: isFromVoice ? 'voice' : 'text' });
 
     try {
       let workingText = text;
@@ -232,7 +226,7 @@ const App = () => {
                   <span className="text-sm font-medium">О приложении</span>
                   <ChevronRight size={16} />
                 </button>
-                <button onClick={() => tg?.openTelegramLink("https://t.me/SnapNoteAI_Bot")} className="w-full p-4 bg-white/5 rounded-2xl border border-white/5 text-left flex items-center justify-between">
+                <button onClick={() => { setIsSettingsOpen(false); setIsFeedbackOpen(true); }} className="w-full p-4 bg-white/5 rounded-2xl border border-white/5 text-left flex items-center justify-between">
                   <span className="text-sm font-medium">Оставить отзыв</span>
                   <MessageCircle size={16} />
                 </button>
@@ -263,6 +257,8 @@ const App = () => {
           </div>
         )}
       </AnimatePresence>
+
+      <FeedbackModal isOpen={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} />
     </div>
   );
 };

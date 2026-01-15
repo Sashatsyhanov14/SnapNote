@@ -85,19 +85,19 @@ async function callOpenRouter(prompt: string, instruction: string, model: string
 }
 
 export async function processNoteWithAI(text: string): Promise<string | null> {
-  const apiKey = process.env.API_KEY;
+  const apiKey = import.meta.env.VITE_API_KEY;
   if (!apiKey) return null;
   return callOpenRouter(text, SYSTEM_INSTRUCTION, MODEL_GEMMA, apiKey);
 }
 
 export async function improveEditedNote(text: string): Promise<string | null> {
-  const apiKey = process.env.API_KEY;
+  const apiKey = import.meta.env.VITE_API_KEY;
   if (!apiKey) return null;
   return callOpenRouter(text, POLISH_INSTRUCTION, MODEL_GEMMA, apiKey);
 }
 
 export async function processVoiceTranscript(text: string): Promise<string | null> {
-  const apiKey = process.env.VOICE_AI_KEY || process.env.API_KEY;
+  const apiKey = import.meta.env.VITE_VOICE_AI_KEY || import.meta.env.VITE_API_KEY;
   if (!apiKey) return null;
   return callOpenRouter(text, VOICE_CLEANUP_INSTRUCTION, MODEL_GEMINI_FLASH_LITE, apiKey);
 }
