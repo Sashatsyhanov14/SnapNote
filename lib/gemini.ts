@@ -39,9 +39,7 @@ const VOICE_CLEANUP_INSTRUCTION = `Ты — помощник по расшифр
  * Основная функция для обращения к OpenRouter через стандартный fetch.
  * Это необходимо, так как ключи OpenRouter несовместимы с Google GenAI SDK.
  */
-async function callOpenRouter(prompt: string, instruction: string, model: string): Promise<string | null> {
-  const apiKey = process.env.OPENROUTER_API_KEY || process.env.API_KEY;
-
+async function callOpenRouter(prompt: string, instruction: string, model: string, apiKey: string): Promise<string | null> {
   if (!apiKey) {
     console.error("SnapNote: API_KEY is missing in environment variables.");
     return null;
@@ -88,13 +86,19 @@ async function callOpenRouter(prompt: string, instruction: string, model: string
 }
 
 export async function processNoteWithAI(text: string): Promise<string | null> {
-  return callOpenRouter(text, SYSTEM_INSTRUCTION, MODEL_GEMMA);
+  const apiKey = process.env.API_KEY;
+  if (!apiKey) return null;
+  return callOpenRouter(text, SYSTEM_INSTRUCTION, MODEL_GEMMA, apiKey);
 }
 
 export async function improveEditedNote(text: string): Promise<string | null> {
-  return callOpenRouter(text, POLISH_INSTRUCTION, MODEL_GEMMA);
+  const apiKey = process.env.API_KEY;
+  if (!apiKey) return null;
+  return callOpenRouter(text, POLISH_INSTRUCTION, MODEL_GEMMA, apiKey);
 }
 
 export async function processVoiceTranscript(text: string): Promise<string | null> {
-  return callOpenRouter(text, VOICE_CLEANUP_INSTRUCTION, MODEL_GEMINI_FLASH_LITE);
+  const apiKey = process.env.VOICE_AI_KEY || process.env.API_KEY;
+  if (!apiKey) return null;
+  return callOpenRouter(text, VOICE_CLEANUP_INSTRUCTION, MODEL_GEMINI_FLASH_LITE, apiKey);
 }
