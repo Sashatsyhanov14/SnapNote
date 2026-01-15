@@ -23,28 +23,37 @@ export const NoteCard: React.FC<NoteCardProps> = ({ content, timestamp, isAI, on
   });
 
   const x = useMotionValue(0);
-  const bgOpacity = useTransform(x, [0, -60], [0, 1]);
+  const bgOpacityDelete = useTransform(x, [0, -60], [0, 1]);
+  const bgOpacityShare = useTransform(x, [0, 60], [0, 1]);
   const isDragging = useRef(false);
 
   return (
     <div className="relative mb-4 break-inside-avoid w-full">
-      <motion.div 
-        style={{ opacity: bgOpacity }}
+      <motion.div
+        style={{ opacity: bgOpacityDelete }}
         className="absolute inset-0 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center justify-end pr-6 z-0"
       >
         <Trash2 className="text-red-400" size={24} />
       </motion.div>
 
-      <motion.div 
+      <motion.div
+        style={{ opacity: bgOpacityShare }}
+        className="absolute inset-0 bg-blue-500/10 border border-blue-500/20 rounded-2xl flex items-center justify-start pl-6 z-0"
+      >
+        <Share2 className="text-blue-400" size={24} />
+      </motion.div>
+
+      <motion.div
         layout
         style={{ x }}
         drag="x"
-        dragConstraints={{ right: 0 }}
-        dragElastic={{ right: 0.1, left: 0.5 }}
+        dragConstraints={{ left: 0, right: 0 }}
+        dragElastic={{ left: 0.5, right: 0.5 }}
         onDragStart={() => { isDragging.current = true; }}
         onDragEnd={(e, { offset }) => {
           setTimeout(() => { isDragging.current = false; }, 100);
           if (offset.x < -80) onDelete();
+          if (offset.x > 80) onShare();
         }}
         onClick={() => !isDragging.current && onClick()}
         className="relative z-10 glass-panel rounded-2xl p-5 hover:border-white/20 transition-all cursor-pointer group"
@@ -55,14 +64,14 @@ export const NoteCard: React.FC<NoteCardProps> = ({ content, timestamp, isAI, on
             AI
           </div>
         )}
-        
+
         <div className="text-[15px] leading-relaxed text-white/80 font-sans mb-4 overflow-hidden max-h-[180px]">
           <ReactMarkdown
             components={{
-              h1: ({children}) => <h1 className="text-lg font-bold text-neon mb-2">{children}</h1>,
-              h2: ({children}) => <h2 className="text-base font-bold text-neon/90 mb-2">{children}</h2>,
-              ul: ({children}) => <ul className="space-y-1 my-2">{children}</ul>,
-              li: ({children}) => {
+              h1: ({ children }) => <h1 className="text-lg font-bold text-neon mb-2">{children}</h1>,
+              h2: ({ children }) => <h2 className="text-base font-bold text-neon/90 mb-2">{children}</h2>,
+              ul: ({ children }) => <ul className="space-y-1 my-2">{children}</ul>,
+              li: ({ children }) => {
                 const text = React.Children.toArray(children).join("");
                 const isChecked = text.includes('[x]');
                 const isUnchecked = text.includes('[ ]');
@@ -76,18 +85,18 @@ export const NoteCard: React.FC<NoteCardProps> = ({ content, timestamp, isAI, on
                 }
                 return <li className="pl-4 relative before:absolute before:left-0 before:top-[0.6em] before:w-1 before:h-1 before:bg-neon before:rounded-full">{children}</li>;
               },
-              p: ({children}) => <p className="mb-2 last:mb-0">{children}</p>
+              p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>
             }}
           >
             {content}
           </ReactMarkdown>
         </div>
-        
+
         <div className="flex items-center justify-between pt-3 border-t border-white/5">
           <span className="text-[10px] font-medium text-white/20 uppercase">
             {dateStr}
           </span>
-          <button 
+          <button
             onClick={(e) => { e.stopPropagation(); onShare(); }}
             className="p-1 text-white/20 hover:text-white/60 transition-colors"
           >

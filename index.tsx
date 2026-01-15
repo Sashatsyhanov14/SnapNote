@@ -149,8 +149,17 @@ const App = () => {
 
   const handleShareNote = (noteContent: string) => {
     tg?.HapticFeedback?.selectionChanged();
+
+    // Convert markdown to plain text with formatting
+    let plainText = noteContent
+      .replace(/^#{1,3}\s+(.+)$/gm, '$1\n') // Remove heading markers
+      .replace(/\*\*(.+?)\*\*/g, '$1') // Remove bold markers
+      .replace(/\[x\]/g, '✅') // Convert checked boxes
+      .replace(/\[ \]/g, '☐') // Convert unchecked boxes
+      .replace(/^[-*]\s+/gm, '• '); // Convert list markers
+
     const botLink = "https://t.me/SnapNoteAI_Bot";
-    const text = `${noteContent}\n\nСоздано в SnapNote 🚀`;
+    const text = `${plainText}\n\n📝 Создано в SnapNote`;
     const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(botLink)}&text=${encodeURIComponent(text)}`;
     tg?.openTelegramLink(shareUrl);
   };
@@ -222,6 +231,17 @@ const App = () => {
                 <button onClick={() => tg?.showAlert("SnapNote v4.0.0\nМодели: Gemma 3 & Gemini 2.5")} className="w-full p-4 bg-white/5 rounded-2xl border border-white/5 text-left flex items-center justify-between">
                   <span className="text-sm font-medium">О приложении</span>
                   <ChevronRight size={16} />
+                </button>
+                <button onClick={() => tg?.openTelegramLink("https://t.me/SnapNoteAI_Bot")} className="w-full p-4 bg-white/5 rounded-2xl border border-white/5 text-left flex items-center justify-between">
+                  <span className="text-sm font-medium">Оставить отзыв</span>
+                  <MessageCircle size={16} />
+                </button>
+                <button onClick={() => {
+                  const shareUrl = `https://t.me/share/url?url=${encodeURIComponent("https://t.me/SnapNoteAI_Bot")}&text=${encodeURIComponent("Попробуй SnapNote — AI-заметки в Telegram! 🚀")}`;
+                  tg?.openTelegramLink(shareUrl);
+                }} className="w-full p-4 bg-white/5 rounded-2xl border border-white/5 text-left flex items-center justify-between">
+                  <span className="text-sm font-medium">Поделиться приложением</span>
+                  <Share2 size={16} />
                 </button>
               </div>
             </motion.div>
