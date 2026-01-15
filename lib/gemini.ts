@@ -4,7 +4,8 @@
  * и наличие заголовка HTTP-Referer, который требуется OpenRouter.
  */
 
-const MAIN_MODEL = "google/gemma-3-27b-it:free";
+const MODEL_GEMMA = "google/gemma-3-27b-it:free";
+const MODEL_GEMINI_FLASH_LITE = "google/gemini-2.5-flash-lite";
 
 const SYSTEM_INSTRUCTION = `Ты — профессиональный редактор заметок.
 Твоя задача: превратить сумбурные мысли в структурированную Markdown-заметку.
@@ -30,8 +31,8 @@ const VOICE_CLEANUP_INSTRUCTION = `Ты — помощник по расшифр
  * Основная функция для обращения к OpenRouter через стандартный fetch.
  * Это необходимо, так как ключи OpenRouter несовместимы с Google GenAI SDK.
  */
-async function callOpenRouter(prompt: string, instruction: string): Promise<string | null> {
-  const apiKey = process.env.API_KEY;
+async function callOpenRouter(prompt: string, instruction: string, model: string): Promise<string | null> {
+  const apiKey = process.env.OPENROUTER_API_KEY || process.env.API_KEY;
 
   if (!apiKey) {
     console.error("SnapNote: API_KEY is missing in environment variables.");
@@ -48,7 +49,7 @@ async function callOpenRouter(prompt: string, instruction: string): Promise<stri
         "X-Title": "SnapNote TMA"
       },
       body: JSON.stringify({
-        model: MAIN_MODEL,
+        model: model,
         messages: [
           { role: "system", content: instruction },
           { role: "user", content: prompt }
@@ -65,7 +66,7 @@ async function callOpenRouter(prompt: string, instruction: string): Promise<stri
     }
 
     const data = await response.json();
-    
+
     if (data.error) {
       console.error("SnapNote: OpenRouter API error:", data.error);
       return null;
@@ -79,13 +80,13 @@ async function callOpenRouter(prompt: string, instruction: string): Promise<stri
 }
 
 export async function processNoteWithAI(text: string): Promise<string | null> {
-  return callOpenRouter(text, SYSTEM_INSTRUCTION);
+  return callOpenRouter(text, SYSTEM_INSTRUCTION, MODEL_GEMMA);
 }
 
 export async function improveEditedNote(text: string): Promise<string | null> {
-  return callOpenRouter(text, POLISH_INSTRUCTION);
+  return callOpenRouter(text, POLISH_INSTRUCTION, MODEL_GEMMA);
 }
 
 export async function processVoiceTranscript(text: string): Promise<string | null> {
-  return callOpenRouter(text, VOICE_CLEANUP_INSTRUCTION);
+  return callOpenRouter(text, VOICE_CLEANUP_INSTRUCTION, MODEL_GEMINI_FLASH_LITE);
 }

@@ -34,7 +34,7 @@ const App = () => {
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  
+
   const processedParam = useRef(false);
   const [confirmation, setConfirmation] = useState<{
     isOpen: boolean;
@@ -70,7 +70,7 @@ const App = () => {
     if (tg) {
       tg.ready();
       tg.expand();
-      tg.setHeaderColor('#1C1C1E'); 
+      tg.setHeaderColor('#1C1C1E');
       tg.setBackgroundColor('#1C1C1E');
     }
 
@@ -78,7 +78,7 @@ const App = () => {
       let currentNotes: Note[] = [];
       const saved = localStorage.getItem('ai-notes-v3');
       if (saved) {
-        try { currentNotes = JSON.parse(saved); } catch (e) {}
+        try { currentNotes = JSON.parse(saved); } catch (e) { }
       }
       setNotes(currentNotes);
     };
@@ -93,7 +93,7 @@ const App = () => {
   const handleSend = async (text: string, isFromVoice: boolean = false) => {
     setIsLoading(true);
     track('note_creation_started', { source: isFromVoice ? 'voice' : 'text' });
-    
+
     try {
       let workingText = text;
       let aiUsed = false;
@@ -105,26 +105,26 @@ const App = () => {
 
       const aiResponse = await processNoteWithAI(workingText);
       let finalContent = workingText;
-      
+
       if (aiResponse) {
         finalContent = aiResponse;
         aiUsed = true;
       }
-      
-      const newNote: Note = { 
-        id: crypto.randomUUID(), 
-        content: finalContent, 
+
+      const newNote: Note = {
+        id: crypto.randomUUID(),
+        content: finalContent,
         timestamp: Date.now(),
         isAI: aiUsed
       };
-      
+
       saveNotes([newNote, ...notes]);
       tg?.HapticFeedback?.notificationOccurred('success');
     } catch (error) {
       const fallbackNote: Note = { id: crypto.randomUUID(), content: text, timestamp: Date.now(), isAI: false };
       saveNotes([fallbackNote, ...notes]);
-    } finally { 
-      setIsLoading(false); 
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -133,17 +133,17 @@ const App = () => {
     setIsSavingEdit(true);
     try {
       const polished = await improveEditedNote(newContent);
-      const updatedNotes = notes.map(n => 
-        n.id === editingNote.id 
-          ? { ...n, content: polished || newContent, isAI: !!polished } 
+      const updatedNotes = notes.map(n =>
+        n.id === editingNote.id
+          ? { ...n, content: polished || newContent, isAI: !!polished }
           : n
       );
       saveNotes(updatedNotes);
       setEditingNote(null);
     } catch (e) {
       setEditingNote(null);
-    } finally { 
-      setIsSavingEdit(false); 
+    } finally {
+      setIsSavingEdit(false);
     }
   };
 
@@ -169,15 +169,15 @@ const App = () => {
           <AnimatePresence mode="popLayout">
             {isLoading && <NoteSkeleton />}
             {notes.map((note, index) => (
-              <NoteCard 
-                key={note.id} 
-                index={index} 
-                {...note} 
-                onClick={() => setEditingNote(note)} 
-                onDelete={() => setConfirmation({ 
-                  isOpen: true, 
-                  message: 'Удалить эту заметку?', 
-                  onConfirm: () => saveNotes(notes.filter(n => n.id !== note.id)) 
+              <NoteCard
+                key={note.id}
+                index={index}
+                {...note}
+                onClick={() => setEditingNote(note)}
+                onDelete={() => setConfirmation({
+                  isOpen: true,
+                  message: 'Удалить эту заметку?',
+                  onConfirm: () => saveNotes(notes.filter(n => n.id !== note.id))
                 })}
                 onShare={() => handleShareNote(note.content)}
               />
@@ -187,19 +187,19 @@ const App = () => {
         {notes.length === 0 && !isLoading && (
           <div className="flex flex-col items-center justify-center py-20 text-white/20">
             <Sparkles size={48} className="mb-4 opacity-50" />
-            <p className="text-center">Напишите или надиктуйте что-нибудь,<br/>а ИИ превратит это в заметку.</p>
+            <p className="text-center">Напишите или надиктуйте что-нибудь,<br />а ИИ превратит это в заметку.</p>
           </div>
         )}
       </main>
 
       <ChatInput onSend={(text, isVoice) => handleSend(text, isVoice)} disabled={isLoading} />
-      
-      <EditModal 
-        isOpen={!!editingNote} 
-        isSaving={isSavingEdit} 
-        initialContent={editingNote?.content || ''} 
-        onClose={() => setEditingNote(null)} 
-        onSave={handleEditSave} 
+
+      <EditModal
+        isOpen={!!editingNote}
+        isSaving={isSavingEdit}
+        initialContent={editingNote?.content || ''}
+        onClose={() => setEditingNote(null)}
+        onSave={handleEditSave}
       />
 
       <AnimatePresence>
@@ -209,7 +209,7 @@ const App = () => {
             <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 20, opacity: 0 }} className="relative glass-panel w-full max-w-sm rounded-3xl p-6">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-xl font-semibold">Настройки</h3>
-                <button onClick={() => setIsSettingsOpen(false)}><X size={20}/></button>
+                <button onClick={() => setIsSettingsOpen(false)}><X size={20} /></button>
               </div>
               <div className="space-y-4">
                 <div className="p-4 bg-white/5 rounded-2xl border border-white/5 flex items-center justify-between">
@@ -219,7 +219,7 @@ const App = () => {
                   </div>
                   <ShieldCheck size={20} className="text-emerald-500" />
                 </div>
-                <button onClick={() => tg?.showAlert("SnapNote v4.0.0\nМодель: Gemini 3 Flash")} className="w-full p-4 bg-white/5 rounded-2xl border border-white/5 text-left flex items-center justify-between">
+                <button onClick={() => tg?.showAlert("SnapNote v4.0.0\nМодели: Gemma 3 & Gemini 2.5")} className="w-full p-4 bg-white/5 rounded-2xl border border-white/5 text-left flex items-center justify-between">
                   <span className="text-sm font-medium">О приложении</span>
                   <ChevronRight size={16} />
                 </button>
