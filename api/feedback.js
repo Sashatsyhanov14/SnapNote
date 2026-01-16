@@ -14,8 +14,7 @@ export default async function handler(request, response) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 chat_id: adminId,
-                text: message,
-                parse_mode: 'Markdown'
+                text: message
             })
         });
 
