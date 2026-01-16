@@ -1,5 +1,5 @@
 export default async function handler(request, response) {
-    const { message } = JSON.parse(request.body);
+    const { message } = typeof request.body === 'string' ? JSON.parse(request.body) : request.body;
 
     const token = process.env.TELEGRAM_BOT_TOKEN;
     const adminId = process.env.ADMIN_CHAT_ID;
