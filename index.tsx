@@ -2,15 +2,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Settings, Database, ShieldCheck, X, ChevronRight, Sparkles, Share2, MessageCircle } from 'lucide-react';
-import posthog from 'posthog-js';
+import { Analytics } from "@vercel/analytics/react";
 import { ChatInput } from './components/ChatInput';
 import { NoteCard, NoteSkeleton } from './components/NoteCard';
 import { EditModal } from './components/EditModal';
 import { FeedbackModal } from './components/FeedbackModal';
 import { processNoteWithAI, improveEditedNote, processVoiceTranscript } from './lib/gemini';
-import { initPostHog, trackEvent } from './lib/posthog';
-
-initPostHog();
 
 declare global {
   interface Window {
@@ -86,7 +83,6 @@ const App = () => {
 
   const handleSend = async (text: string, isFromVoice: boolean = false) => {
     setIsLoading(true);
-    trackEvent('note_creation_started', { source: isFromVoice ? 'voice' : 'text' });
 
     try {
       let workingText = text;
@@ -264,4 +260,9 @@ const App = () => {
 };
 
 const root = createRoot(document.getElementById('root')!);
-root.render(<App />);
+root.render(
+  <React.StrictMode>
+    <App />
+    <Analytics />
+  </React.StrictMode>
+);

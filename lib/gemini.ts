@@ -38,66 +38,47 @@ const VOICE_CLEANUP_INSTRUCTION = `Ты — помощник по расшифр
  * Основная функция для обращения к OpenRouter через стандартный fetch.
  * Это необходимо, так как ключи OpenRouter несовместимы с Google GenAI SDK.
  */
-async function callOpenRouter(prompt: string, instruction: string, model: string, apiKey: string): Promise<string | null> {
-  if (!apiKey) {
-    console.error("SnapNote: API_KEY is missing in environment variables.");
-    return null;
-  }
-
+async function callBackendProxy(prompt: string, instruction: string, model: string): Promise<string | null> {
   try {
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    const response = await fetch('/api/chat', {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${apiKey}`,
-        "HTTP-Referer": "https://snapnote.tma", // Требование OpenRouter для идентификации приложения
-        "X-Title": "SnapNote TMA"
       },
       body: JSON.stringify({
-        model: model,
-        messages: [
-          { role: "system", content: instruction },
-          { role: "user", content: prompt }
-        ],
-        temperature: 0.3,
-        max_tokens: 1000
+        prompt,
+        instruction,
+        model
       })
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`SnapNote: OpenRouter Error (${response.status}):`, errorText);
-      return null;
+        console.error(`SnapNote: Backend API Error (${response.status})`);
+        return null;
     }
 
     const data = await response.json();
-
+    
     if (data.error) {
-      console.error("SnapNote: OpenRouter API error:", data.error);
-      return null;
+        console.error("SnapNote: Backend API returned error:", data.error);
+        return null; 
     }
 
     return data.choices?.[0]?.message?.content || null;
   } catch (error) {
-    console.error("SnapNote: Network Error calling OpenRouter:", error);
+    console.error("SnapNote: Network Error calling Backend:", error);
     return null;
   }
 }
 
 export async function processNoteWithAI(text: string): Promise<string | null> {
-  const apiKey = import.meta.env.VITE_API_KEY;
-  if (!apiKey) return null;
-  return callOpenRouter(text, SYSTEM_INSTRUCTION, MODEL_GEMMA, apiKey);
+  return callBackendProxy(text, SYSTEM_INSTRUCTION, MODEL_GEMMA);
 }
 
 export async function improveEditedNote(text: string): Promise<string | null> {
-  const apiKey = import.meta.env.VITE_API_KEY;
-  if (!apiKey) return null;
-  return callOpenRouter(text, POLISH_INSTRUCTION, MODEL_GEMMA, apiKey);
+  return callBackendProxy(text, POLISH_INSTRUCTION, MODEL_GEMMA);
 }
 
 export async function processVoiceTranscript(text: string): Promise<string | null> {
-  const apiKey = import.meta.env.VITE_VOICE_AI_KEY || import.meta.env.VITE_API_KEY;
-  if (!apiKey) return null;
-  return callOpenRouter(text, VOICE_CLEANUP_INSTRUCTION, MODEL_GEMINI_FLASH_LITE, apiKey);
+  return callBackendProxy(text, VOICE_CLEANUP_INSTRUCTION, MODEL_GEMINI_FLASH_LITE);
 }

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Send, Star } from 'lucide-react';
-import { trackEvent } from '../lib/posthog';
 
 interface FeedbackModalProps {
     isOpen: boolean;
@@ -24,23 +23,48 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
 
         setIsSubmitting(true);
 
-        // Send to PostHog
-        trackEvent('feedback_submitted', {
-            review_text: feedbackText,
-            rating: rating || undefined,
-            timestamp: Date.now(),
-        });
 
-        // Show success message
-        tg?.showAlert('Спасибо за отзыв! 💙');
 
-        // Reset and close
-        setTimeout(() => {
-            setFeedbackText('');
-            setRating(0);
-            setIsSubmitting(false);
-            onClose();
-        }, 500);
+        // User info context
+        const user = tg?.initDataUnsafe?.user;
+        const username = user
+            ? `@${user.username} (${user.first_name}) [ID: ${user.id}]`
+            : 'Аноним';
+
+        const stars = rating > 0 ? '⭐'.repeat(rating) : 'Без оценки';
+
+        const message = `
+🔔 **Новый отзыв SnapNote!**
+👤 **От:** ${username}
+🌟 **Оценка:** ${stars}
+
+📝 **Текст:**
+${feedbackText}
+`;
+
+        try {
+            const response = await fetch('/api/feedback', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message })
+            });
+
+            if (!response.ok) throw new Error('Failed to send feedback');
+
+            // Show success message
+            tg?.showAlert('Спасибо за отзыв! 💙\nЯ уже читаю его.');
+        } catch (e) {
+            console.error('Feedback send error:', e);
+            tg?.showAlert('Произошла ошибка, но мы все равно ценим ваш порыв!');
+        } finally {
+            // Reset and close
+            setTimeout(() => {
+                setFeedbackText('');
+                setRating(0);
+                setIsSubmitting(false);
+                onClose();
+            }, 500);
+        }
     };
 
     return (
@@ -88,8 +112,8 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
                                         <Star
                                             size={32}
                                             className={`transition-colors ${star <= (hoveredRating || rating)
-                                                    ? 'fill-yellow-400 text-yellow-400'
-                                                    : 'text-white/20'
+                                                ? 'fill-yellow-400 text-yellow-400'
+                                                : 'text-white/20'
                                                 }`}
                                         />
                                     </button>
