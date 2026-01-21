@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Settings, Database, ShieldCheck, X, ChevronRight, Sparkles, Share2 } from 'lucide-react';
 import { Analytics } from "@vercel/analytics/react";
+import posthog from 'posthog-js';
 import { ChatInput } from './components/ChatInput';
 import { NoteCard, NoteSkeleton } from './components/NoteCard';
 import { EditModal } from './components/EditModal';
@@ -14,6 +15,13 @@ declare global {
     Telegram: any;
   }
 }
+
+// Инициализация PostHog
+posthog.init(import.meta.env.VITE_POSTHOG_KEY, {
+  api_host: import.meta.env.VITE_POSTHOG_HOST,
+  person_profiles: 'identified_only',
+  capture_pageview: false
+});
 
 interface Note {
   id: string;
@@ -109,6 +117,11 @@ const App = () => {
 
       saveNotes([newNote, ...notes]);
       tg?.HapticFeedback?.notificationOccurred('success');
+
+      posthog.capture('note_generated', {
+        method: isFromVoice ? 'voice' : 'text',
+        length: text.length
+      });
     } catch (error) {
       const fallbackNote: Note = { id: crypto.randomUUID(), content: text, timestamp: Date.now(), isAI: false };
       saveNotes([fallbackNote, ...notes]);

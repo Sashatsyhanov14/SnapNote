@@ -13,7 +13,7 @@
     "@vercel/analytics": "^1.6.1",
     "framer-motion": "^12.25.0",
     "lucide-react": "^0.562.0",
-    "posthog-js": "^1.160.0",
+    "posthog-js": "^1.333.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "react-markdown": "9"
