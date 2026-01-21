@@ -16,11 +16,23 @@ declare global {
   }
 }
 
-// Инициализация PostHog
-posthog.init(import.meta.env.VITE_POSTHOG_KEY, {
-  api_host: import.meta.env.VITE_POSTHOG_HOST,
+// ЖЕСТКАЯ ПРОВЕРКА
+const PH_KEY = import.meta.env.VITE_POSTHOG_KEY
+const PH_HOST = import.meta.env.VITE_POSTHOG_HOST
+
+console.log('🔑 Ключ:', PH_KEY ? 'Есть' : 'НЕТ!')
+console.log('🌐 Хост:', PH_HOST)
+
+posthog.init(PH_KEY, {
+  api_host: PH_HOST,
   person_profiles: 'identified_only',
-  capture_pageview: false
+  // Включаем режим отладки — он будет писать в консоль всё, что делает
+  debug: true,
+  loaded: (ph) => {
+    console.log('✅ POSTHOG ЗАГРУЗИЛСЯ! ID:', ph.get_distinct_id())
+    // Принудительно шлем тестовое событие при загрузке
+    ph.capture('test_event_forced', { status: 'working' })
+  }
 });
 
 interface Note {
