@@ -64,6 +64,7 @@ const VOICE_CLEANUP_INSTRUCTION = `Ты — модуль обработки го
  */
 async function callBackendAPI(prompt: string, instruction: string, model: string): Promise<string | null> {
   try {
+    console.log("🔄 SnapNote: Trying Backend API...");
     const response = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -85,15 +86,18 @@ async function callBackendAPI(prompt: string, instruction: string, model: string
     }
 
     const data = await response.json();
-    return data.choices?.[0]?.message?.content || null;
+    const result = data.choices?.[0]?.message?.content || null;
+    console.log("✅ SnapNote: Backend AI Success", result ? `(${result.length} chars)` : "(null)");
+    return result;
   } catch (error) {
-    console.warn("SnapNote: Backend unreachable, trying client-side fallback...", error);
+    console.warn("⚠️ SnapNote: Backend unreachable, trying client-side fallback...", error);
     throw error; // Rethrow to trigger fallback
   }
 }
 
 async function callOpenRouter(prompt: string, instruction: string, model: string, apiKey: string): Promise<string | null> {
   try {
+    console.log("🔄 SnapNote: Using Client-side OpenRouter...");
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -106,21 +110,29 @@ async function callOpenRouter(prompt: string, instruction: string, model: string
         model,
         messages: [
           { role: "system", content: instruction },
-          { role: "user", content: prompt }
-        ]
+          { role: "user", content: `IMPORTANT INSTRUCTION:\n${instruction}\n\nUSER CONTENT:\n${prompt}` }
+        ],
+        temperature: 0.3,
+        max_tokens: 1000
       })
     });
 
-    if (!response.ok) return null;
+    if (!response.ok) {
+      console.error("❌ SnapNote: OpenRouter Error", response.status);
+      return null;
+    }
     const data = await response.json();
-    return data.choices?.[0]?.message?.content || null;
+    const result = data.choices?.[0]?.message?.content || null;
+    console.log("✅ SnapNote: Client-side AI Success", result ? `(${result.length} chars)` : "(null)");
+    return result;
   } catch (e) {
-    console.error("SnapNote: Client-side API error", e);
+    console.error("❌ SnapNote: Client-side API error", e);
     return null;
   }
 }
 
 async function callAI(prompt: string, instruction: string, model: string, clientKey?: string): Promise<string | null> {
+  console.log(`🤖 SnapNote: Processing with AI (${model})...`);
   try {
     return await callBackendAPI(prompt, instruction, model);
   } catch (e) {
