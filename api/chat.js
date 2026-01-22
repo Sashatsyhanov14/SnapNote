@@ -30,7 +30,7 @@ export default async function handler(request, response) {
         model: model,
         messages: [
           { role: "system", content: instruction },
-          { role: "user", content: prompt }
+          { role: "user", content: `IMPORTANT INSTRUCTION:\n${instruction}\n\nUSER CONTENT:\n${prompt}` }
         ],
         temperature: 0.3,
         max_tokens: 1000
