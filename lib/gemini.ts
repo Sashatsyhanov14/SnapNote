@@ -164,6 +164,10 @@ const VOICE_CLEANUP_INSTRUCTION = `Ты — модуль обработки го
 async function callBackendAPI(prompt: string, instruction: string, model: string): Promise<string | null> {
   try {
     console.log("🔄 SnapNote: Trying Backend API...");
+    console.log(`   Model: ${model}`);
+    console.log(`   Prompt length: ${prompt.length} chars`);
+    console.log(`   Instruction length: ${instruction.length} chars`);
+
     const response = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -177,11 +181,10 @@ async function callBackendAPI(prompt: string, instruction: string, model: string
     }
 
     if (!response.ok) {
-      // If it's a 404, it might be local dev without API support -> fallback
-      if (response.status === 404) throw new Error("API not found (404)");
+      // Any error status should trigger fallback
       const error = await response.text();
-      console.error(`SnapNote: Backend Error (${response.status}):`, error);
-      return null;
+      console.error(`❌ SnapNote: Backend Error (${response.status}):`, error);
+      throw new Error(`Backend API failed with status ${response.status}: ${error}`);
     }
 
     const data = await response.json();
