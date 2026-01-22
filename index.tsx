@@ -101,6 +101,7 @@ const App = () => {
   };
 
   const handleSend = async (text: string, isFromVoice: boolean = false) => {
+    console.log('📝 handleSend called with text:', text, 'isVoice:', isFromVoice);
     setIsLoading(true);
 
     try {
@@ -108,11 +109,14 @@ const App = () => {
       let aiUsed = false;
 
       if (isFromVoice) {
+        console.log('🎤 Processing voice transcript...');
         const cleaned = await processVoiceTranscript(text);
         if (cleaned) workingText = cleaned;
       }
 
+      console.log('🚀 Calling processNoteWithAI with:', workingText.substring(0, 50) + '...');
       const aiResponse = await processNoteWithAI(workingText);
+      console.log('📥 AI Response received:', aiResponse ? `${aiResponse.length} chars` : 'null');
       let finalContent = workingText;
 
       if (aiResponse) {
@@ -127,6 +131,7 @@ const App = () => {
         isAI: aiUsed
       };
 
+      console.log('💾 Saving note, AI used:', aiUsed);
       saveNotes([newNote, ...notes]);
       tg?.HapticFeedback?.notificationOccurred('success');
 
@@ -135,6 +140,7 @@ const App = () => {
         length: text.length
       });
     } catch (error) {
+      console.error('❌ Error in handleSend:', error);
       const fallbackNote: Note = { id: crypto.randomUUID(), content: text, timestamp: Date.now(), isAI: false };
       saveNotes([fallbackNote, ...notes]);
     } finally {
