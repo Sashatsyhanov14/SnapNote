@@ -66,44 +66,83 @@ async function callBackendAPI(prompt: string, instruction: string, model: string
   try {
     const response = await fetch("/api/chat", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        prompt,
-        instruction,
-        model
-      })
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt, instruction, model })
     });
 
+    // If we get an HTML response (likely Vite serving index.html for unknown route), throw to trigger fallback
+    const contentType = response.headers.get("content-type");
+    if (contentType && contentType.includes("text/html")) {
+      throw new Error("Local environment detected (HTML response from API)");
+    }
+
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`SnapNote: Backend Error (${response.status}):`, errorText);
+      // If it's a 404, it might be local dev without API support -> fallback
+      if (response.status === 404) throw new Error("API not found (404)");
+      const error = await response.text();
+      console.error(`SnapNote: Backend Error (${response.status}):`, error);
       return null;
     }
 
     const data = await response.json();
-
-    if (data.error) {
-      console.error("SnapNote: Backend API returned error:", data.error);
-      return null;
-    }
-
     return data.choices?.[0]?.message?.content || null;
   } catch (error) {
-    console.error("SnapNote: Network Error calling Backend:", error);
+    console.warn("SnapNote: Backend unreachable, trying client-side fallback...", error);
+    throw error; // Rethrow to trigger fallback
+  }
+}
+
+async function callOpenRouter(prompt: string, instruction: string, model: string, apiKey: string): Promise<string | null> {
+  try {
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`,
+        "HTTP-Referer": "https://snapnote.tma",
+        "X-Title": "SnapNote TMA"
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: "system", content: instruction },
+          { role: "user", content: prompt }
+        ]
+      })
+    });
+
+    if (!response.ok) return null;
+    const data = await response.json();
+    return data.choices?.[0]?.message?.content || null;
+  } catch (e) {
+    console.error("SnapNote: Client-side API error", e);
+    return null;
+  }
+}
+
+async function callAI(prompt: string, instruction: string, model: string, clientKey?: string): Promise<string | null> {
+  try {
+    return await callBackendAPI(prompt, instruction, model);
+  } catch (e) {
+    if (clientKey) {
+      console.log("SnapNote: Falling back to Client-side API call");
+      return callOpenRouter(prompt, instruction, model, clientKey);
+    }
+    console.error("SnapNote: API Failed and no client key provided for fallback.");
     return null;
   }
 }
 
 export async function processNoteWithAI(text: string): Promise<string | null> {
-  return callBackendAPI(text, SYSTEM_INSTRUCTION, MODEL_GEMMA);
+  // Use VITE_API_KEY as fallback
+  return callAI(text, SYSTEM_INSTRUCTION, MODEL_GEMMA, import.meta.env.VITE_API_KEY);
 }
 
 export async function improveEditedNote(text: string): Promise<string | null> {
-  return callBackendAPI(text, POLISH_INSTRUCTION, MODEL_GEMMA);
+  return callAI(text, POLISH_INSTRUCTION, MODEL_GEMMA, import.meta.env.VITE_API_KEY);
 }
 
 export async function processVoiceTranscript(text: string): Promise<string | null> {
-  return callBackendAPI(text, VOICE_CLEANUP_INSTRUCTION, MODEL_GEMINI_FLASH_LITE);
+  const key = import.meta.env.VITE_VOICE_AI_KEY || import.meta.env.VITE_API_KEY;
+  return callAI(text, VOICE_CLEANUP_INSTRUCTION, MODEL_GEMINI_FLASH_LITE, key);
 }
