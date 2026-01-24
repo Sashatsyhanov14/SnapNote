@@ -72,14 +72,24 @@ export const NoteCard: React.FC<NoteCardProps> = ({ content, timestamp, isAI, on
               h2: ({ children }) => <h2 className="text-base font-bold text-neon/90 mb-2">{children}</h2>,
               ul: ({ children }) => <ul className="space-y-1 my-2">{children}</ul>,
               li: ({ children }) => {
-                const text = React.Children.toArray(children).join("");
-                const isChecked = text.includes('[x]');
-                const isUnchecked = text.includes('[ ]');
+                const childArray = React.Children.toArray(children);
+                let firstChildText = "";
+                if (childArray.length > 0 && typeof childArray[0] === 'string') {
+                  firstChildText = childArray[0];
+                }
+
+                const isChecked = firstChildText.includes('[x]');
+                const isUnchecked = firstChildText.includes('[ ]');
+
                 if (isChecked || isUnchecked) {
+                  const cleanedText = firstChildText.replace(/\[x\]|\[ \]/g, '');
                   return (
                     <li className="flex items-start gap-2 my-1">
                       <div className="mt-1">{isChecked ? <CheckSquare size={14} className="text-neon" /> : <Square size={14} className="text-white/20" />}</div>
-                      <span className={isChecked ? 'text-white/40 line-through' : ''}>{text.replace(/\[x\]|\[ \]/g, '')}</span>
+                      <span className={isChecked ? 'text-white/40 line-through' : ''}>
+                        {cleanedText}
+                        {childArray.slice(1)}
+                      </span>
                     </li>
                   );
                 }
@@ -92,16 +102,22 @@ export const NoteCard: React.FC<NoteCardProps> = ({ content, timestamp, isAI, on
           </ReactMarkdown>
         </div>
 
-        <div className="flex items-center justify-between pt-3 border-t border-white/5">
-          <span className="text-[10px] font-medium text-white/20 uppercase">
-            {dateStr}
-          </span>
-          <button
-            onClick={(e) => { e.stopPropagation(); onShare(); }}
-            className="p-1 text-white/20 hover:text-white/60 transition-colors"
-          >
-            <Share2 size={14} />
-          </button>
+        <div className="flex flex-col gap-2 pt-3 border-t border-white/5">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-medium text-white/20 uppercase">
+              {dateStr}
+            </span>
+            <button
+              onClick={(e) => { e.stopPropagation(); onShare(); }}
+              className="p-1 text-white/20 hover:text-white/60 transition-colors"
+            >
+              <Share2 size={14} />
+            </button>
+          </div>
+          <div className="flex justify-between items-center px-4 w-full">
+            <span className="text-[10px] text-white/20">← свайп удалить</span>
+            <span className="text-[10px] text-white/20">поделиться свайп →</span>
+          </div>
         </div>
       </motion.div>
     </div>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Send, Star } from 'lucide-react';
+import { posthog } from '../lib/posthog';
 
 interface FeedbackModalProps {
     isOpen: boolean;
@@ -23,7 +24,16 @@ export const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose })
 
         setIsSubmitting(true);
 
-
+        // Capture event in PostHog
+        try {
+            posthog.capture('feedback_submitted', {
+                rating: rating,
+                text: feedbackText,
+                has_text: feedbackText.length > 0
+            });
+        } catch (phError) {
+            console.warn('PostHog capture failed', phError);
+        }
 
         // User info context
         const user = tg?.initDataUnsafe?.user;
