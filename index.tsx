@@ -220,9 +220,11 @@ const App = () => {
           </div>
         )}
         {notes.length > 0 && !isLoading && (
-          <div className="flex justify-between px-8 py-8 text-white/20 text-[10px] uppercase tracking-wider font-medium">
-            <span>← свайп удалить</span>
-            <span>поделиться свайп →</span>
+          <div className="flex flex-col items-center justify-center py-12 text-white/20 text-sm">
+            <p className="text-center">
+              ← Свайп влево — удалить<br />
+              Свайп вправо — поделиться →
+            </p>
           </div>
         )}
       </main>
