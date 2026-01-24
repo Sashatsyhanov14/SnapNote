@@ -219,6 +219,12 @@ const App = () => {
             <p className="text-center">Напишите или надиктуйте что-нибудь,<br />а ИИ превратит это в заметку.</p>
           </div>
         )}
+        {notes.length > 0 && !isLoading && (
+          <div className="flex justify-between px-8 py-8 text-white/20 text-[10px] uppercase tracking-wider font-medium">
+            <span>← свайп удалить</span>
+            <span>поделиться свайп →</span>
+          </div>
+        )}
       </main>
 
       <ChatInput onSend={(text, isVoice) => handleSend(text, isVoice)} disabled={isLoading} />
@@ -280,7 +286,7 @@ const App = () => {
           </div>
         )}
       </AnimatePresence>
-    </div>
+    </div >
   );
 };
 

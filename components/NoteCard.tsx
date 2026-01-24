@@ -102,22 +102,16 @@ export const NoteCard: React.FC<NoteCardProps> = ({ content, timestamp, isAI, on
           </ReactMarkdown>
         </div>
 
-        <div className="flex flex-col gap-2 pt-3 border-t border-white/5">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-medium text-white/20 uppercase">
-              {dateStr}
-            </span>
-            <button
-              onClick={(e) => { e.stopPropagation(); onShare(); }}
-              className="p-1 text-white/20 hover:text-white/60 transition-colors"
-            >
-              <Share2 size={14} />
-            </button>
-          </div>
-          <div className="flex justify-between items-center px-4 w-full">
-            <span className="text-[10px] text-white/20">← свайп удалить</span>
-            <span className="text-[10px] text-white/20">поделиться свайп →</span>
-          </div>
+        <div className="flex items-center justify-between pt-3 border-t border-white/5">
+          <span className="text-[10px] font-medium text-white/20 uppercase">
+            {dateStr}
+          </span>
+          <button
+            onClick={(e) => { e.stopPropagation(); onShare(); }}
+            className="p-1 text-white/20 hover:text-white/60 transition-colors"
+          >
+            <Share2 size={14} />
+          </button>
         </div>
       </motion.div>
     </div>
